@@ -8,9 +8,9 @@
 
 # For this purpose we are using 3 master and 2 nodes to create a multi-master k8s cluster using kubeadm installation tool. Below are the pre-requisite requirements for the installation.
 
-# 3 machines for master, ubuntu 20.04+, 2 CPU, 4 GB RAM, 10 GB Storage.
-# 2 machines for master, ubuntu 20.04+, 1 CPU, 2 GB RAM, 10 GB Storage.
-# 1 Machine for Load-Balancer, Ubuntu 20.04+, 1 CPU, 1 GB RAM, 10 Gb Storage.
+# 3 machines for master, ubuntu 20.04+, 2 CPU, 4 GB RAM, 10 GB Storage.        > (t2.medium)
+# 2 machines for Worker Nodes, ubuntu 20.04+, 1 CPU, 2 GB RAM, 10 GB Storage.  > (t2.micro)
+# 1 Machine for Load-Balancer, Ubuntu 20.04+, 1 CPU, 1 GB RAM, 10 Gb Storage.  > (t2.micro)
 # All the machines must be accessible on the network. For Cloud Users-single vpc for all machines.
 # Note -:
 # ------
