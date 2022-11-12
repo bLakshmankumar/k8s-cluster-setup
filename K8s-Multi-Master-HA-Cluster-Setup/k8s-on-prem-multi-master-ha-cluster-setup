@@ -36,7 +36,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 #  frontend fr-apiserver
 #      bind 0.0.0.0:6443
-#      mode tcp
+#      node tcp
 #      option tcplog
 #      default_backend be-apiserver
 
