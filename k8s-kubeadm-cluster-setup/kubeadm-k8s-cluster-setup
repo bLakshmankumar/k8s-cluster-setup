@@ -13,7 +13,6 @@ Prerequisite:
 
 2 - Workers  (1 GB, 1 Core)     t2.micro
 
-
 Note: Open Required Ports In AWS Security Groups. For now we will open All trafic.
 
 ==========COMMON FOR MASTER & SLAVES START ====
@@ -22,18 +21,6 @@ Note: Open Required Ports In AWS Security Groups. For now we will open All trafi
 
 sudo su -
 
-# Install Required packages and apt keys.
-
-apt-get update -y
-apt-get install -y apt-transport-https
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
-deb https://apt.kubernetes.io/ kubernetes-xenial main
-EOF
-apt-get update -y
-
-
-
 #Turn Off Swap Space
 
 swapoff -a
@@ -41,21 +28,44 @@ sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
 # Install And Enable Docker
 
-apt install docker.io -y
-usermod -aG docker ubuntu
-systemctl restart docker
-systemctl enable docker.service
+# apt install docker.io -y (or)
+> sudo apt-get remove docker docker-engine docker.io containerd runc
+> sudo apt-get update
+> sudo apt-get install \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+> sudo mkdir -p /etc/apt/keyrings
+> sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+> echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+> sudo apt-get update
+> sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+> sudo usermod -aG docker ubuntu
+> sudo mkdir /etc/docker
+> cat <<EOF | sudo tee /etc/docker/daemon.json
+{ "exec-opts": ["native.cgroupdriver=systemd"],
+"log-driver": "json-file",
+"log-opts":
+{ "max-size": "100m" },
+"storage-driver": "overlay2"
+}
+EOF
+> sudo systemctl enable docker
+> sudo systemctl deamon-reload
+> sudo systemctl enable docker.service
 
+# Install k8s.
 
-#Install kubeadm, Kubelet And Kubectl
-
-apt-get install -y kubelet kubeadm kubectl kubernetes-cni
-
-# Enable and start kubelet service
-
-systemctl daemon-reload
-systemctl start kubelet
-systemctl enable kubelet.service
+> sudo apt-get update -y
+> sudo apt-get install -y apt-transport-https ca-certificates curl
+> sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+> echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+> sudo apt-get update
+> sudo apt-get install -y kubelet kubeadm kubectl
+> sudo apt-mark hold kubelet kubeadm kubectl
 
 ==========COMMON FOR MASTER & SLAVES END=====
 
@@ -63,7 +73,7 @@ systemctl enable kubelet.service
 
 ===========In Master Node Start====================
 
-# Steps Only For Kubernetes Master
+# Steps Only For Kubernetes Master Only
 
 # Switch to the root user.
 
@@ -78,10 +88,14 @@ kubeadm init
 exit
 -------------------------------------------------------
 # These below commands execute in a normal user9ex-:ubuntu).
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
+  > mkdir -p $HOME/.kube
+  > sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  > sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+# Add Worker Machines to Kubernates Master
+# =========================================
+  >  Copy kubeadm join token and execute in Worker Nodes to join to cluster
 
 # To verify, if kubectl is working or not, run the following command.
 
@@ -109,19 +123,12 @@ The connection to the server 192.168.1.101:6443 was refused - did you specify th
 
   kubectl get pods --all-namespaces
 
-
 # Get token
 #----------
 
 kubeadm token create --print-join-command
 
 # =========In Master Node End====================
-
-
-# Add Worker Machines to Kubernates Master
-# =========================================
-
-Copy kubeadm join token from and execute in Worker Nodes to join to cluster
 
 
 # Now kubectl commonds has to be executed in master machine.
