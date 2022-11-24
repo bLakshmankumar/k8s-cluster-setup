@@ -54,7 +54,7 @@ sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 }
 EOF
 > sudo systemctl enable docker
-> sudo systemctl deamon-reload
+> sudo systemctl daemon-reload
 > sudo systemctl enable docker.service
 
 # Install k8s.
